@@ -1,12 +1,18 @@
 /* BAYBREEZE Business OS — app.js
-   Guards the page behind login.html, registers the offline service worker,
+   Guards the page behind real Supabase auth, registers the offline service worker,
    then runs the dashboard/POS logic. */
 
-(function authGuard(){
-  if(sessionStorage.getItem('bb_auth')!=='1'){
-    location.replace('login.html');
-  }
-})();
+let CURRENT_USER = null;
+
+async function authGuard(){
+  const {data} = await sb.auth.getSession();
+  if(!data.session){ location.replace('login.html'); return false; }
+  CURRENT_USER = data.session.user;
+  return true;
+}
+sb.auth.onAuthStateChange((_event, session)=>{
+  if(!session) location.replace('login.html');
+});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
@@ -14,12 +20,19 @@ if('serviceWorker' in navigator){
   });
 }
 
-document.getElementById('logoutBtn')?.addEventListener('click',()=>{
-  sessionStorage.removeItem('bb_auth');
+document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
+  await sb.auth.signOut();
   location.replace('login.html');
 });
 
-/* ---------------- original dashboard / POS logic ---------------- */
+/* ---------------- original dashboard / POS logic, now gated ---------------- */
+(async function boot(){
+  const ok = await authGuard();
+  if(!ok) return;
+  initApp();
+})();
+
+function initApp(){
 const groups=[
  ["Overview",[["dash","◧","Dashboard"],["pos","▣","POS / Sales"]]],
  ["Make",[["x","◫","Products"],["x","☰","Recipes / BOM"],["x","⚙","Production"]]],
@@ -103,9 +116,15 @@ const ch=[["Retail shop",42,"Rs. 412k"],["Wholesale",27,"Rs. 264k"],["WhatsApp",
  document.getElementById('legend').innerHTML=ch.map(([n,p,v],i)=>`<div class="row"><span class="sw" style="background:${colors[i%5]}"></span>${n} <small>${p}%</small><b>${v}</b></div>`).join('');
 })();
 
-const P=[["Fish Jaadi 250g",950,"FJ-250",42,950],["Mixed Seafood Jaadi 500g",1850,"MS-500",18,1850],["Premium Fish Jaadi 1kg",3400,"PF-1000",9,3200],["Fish Jaadi 250g (wholesale)",820,"FJ-250W",120,800]];
-const cart=[[0,2],[1,1]];
-document.getElementById('tiles').innerHTML=P.map((p,i)=>`<button class="tile" data-i="${i}"><small>${p[2]}</small><b>${p[0]}</b><small>${p[3]} in stock</small><span class="p">Rs. ${p[1].toLocaleString()}</span></button>`).join('');
+let P=[]; // [name, price, sku, stock, min_price, id] — loaded from Supabase
+let cart=[];
+async function loadProducts(){
+ const {data, error} = await sb.from('products').select('id,name,price,sku,stock,min_price').order('name');
+ if(error){ document.getElementById('tiles').innerHTML=`<p style="color:var(--mute)">Could not load products: ${error.message}</p>`; return; }
+ P = (data||[]).map(p=>[p.name, Number(p.price), p.sku, p.stock, Number(p.min_price ?? p.price), p.id]);
+ document.getElementById('tiles').innerHTML=P.map((p,i)=>`<button class="tile" data-i="${i}"><small>${p[2]}</small><b>${p[0]}</b><small>${p[3]} in stock</small><span class="p">Rs. ${p[1].toLocaleString()}</span></button>`).join('');
+ draw();
+}
 function draw(){
  let s=0;
  document.getElementById('cart').innerHTML=cart.map(([i,q],k)=>{s+=P[i][1]*q;return `<div class="line"><div><b>${P[i][0]}</b><br><small>Rs. ${P[i][1].toLocaleString()}</small></div><div class="qty"><button data-k="${k}" data-d="-1" aria-label="Decrease">−</button><b>${q}</b><button data-k="${k}" data-d="1" aria-label="Increase">+</button></div></div>`}).join('')||'<p style="color:#6B6F85;padding:14px 0">Tap a product to start a sale.</p>';
@@ -114,7 +133,23 @@ function draw(){
 }
 document.getElementById('tiles').onclick=e=>{const t=e.target.closest('.tile');if(!t)return;const i=+t.dataset.i,f=cart.find(c=>c[0]===i);f?f[1]++:cart.push([i,1]);draw()};
 document.getElementById('cart').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const c=cart[+b.dataset.k];c[1]+=+b.dataset.d;if(c[1]<1)cart.splice(+b.dataset.k,1);draw()};
-draw();
+loadProducts();
+
+document.getElementById('payBtn')?.addEventListener('click', async ()=>{
+ if(!cart.length) return;
+ const payBtn=document.getElementById('payBtn');
+ const items=cart.map(([i,q])=>({product_id:P[i][5], product_name:P[i][0], unit_price:P[i][1], qty:q, line_total:P[i][1]*q}));
+ const total=items.reduce((a,it)=>a+it.line_total,0);
+ const method=document.querySelector('.pay .on')?.textContent.trim()||'Cash';
+ payBtn.disabled=true; payBtn.textContent='Saving…';
+ const {data:sale, error} = await sb.from('sales').insert({cashier_id:CURRENT_USER.id, subtotal:total, discount:0, total, payment_method:method}).select().single();
+ if(error){ alert('Could not save sale: '+error.message); payBtn.disabled=false; payBtn.textContent='Take payment'; return; }
+ const rows=items.map(it=>({...it, sale_id:sale.id}));
+ const {error:itemErr} = await sb.from('sale_items').insert(rows);
+ if(itemErr){ alert('Sale saved but items failed: '+itemErr.message); }
+ else{ cart=[]; draw(); payBtn.textContent='Saved ✓'; setTimeout(()=>{payBtn.textContent='Take payment';payBtn.disabled=false},1200); }
+});
+document.querySelectorAll('.pay button').forEach(b=>b.onclick=()=>document.querySelectorAll('.pay button').forEach(x=>x.classList.toggle('on',x===b)));
 
 const A={
  "Why did cost go up?":[["Fact","Dried fish went from Rs. 1,190/kg to Rs. 1,290/kg (+8.4%) on invoice SUP-2291."],["Calculation","That adds about Rs. 38 to each Fish Jaadi 250g unit."],["Possible explanation","Seasonal supply. Nothing in the system confirms it."],["User decision","Change supplier, raise the price, or accept the lower margin."]],
@@ -123,3 +158,5 @@ const A={
 };
 const cls={Fact:"t-g",Calculation:"t-b",Trend:"t-a","Possible explanation":"t-a","User decision":"t-r","Insufficient data":"t-r"};
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{document.getElementById('ans').innerHTML=A[b.textContent].map(([t,x])=>`<p><span class="tag ${cls[t]}">${t}</span> ${x}</p>`).join('')});
+
+} // end initApp

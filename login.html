@@ -9,20 +9,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="login.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 </head>
 <body>
 <div class="wrap">
  <div class="card">
   <div class="brand"><div class="ring">B</div><div><b>BAYBREEZE</b><small>Jaadi Business OS</small></div></div>
-  <h1>Welcome back</h1>
-  <p class="sub">Sign in to open your dashboard.</p>
+  <h1 id="formTitle">Welcome back</h1>
+  <p class="sub" id="formSub">Sign in to open your dashboard.</p>
   <form id="loginForm" autocomplete="on">
-   <label>Username<input type="text" id="user" placeholder="owner" autocomplete="username" required></label>
-   <label>Password<input type="password" id="pass" placeholder="••••••••" autocomplete="current-password" required></label>
-   <div id="err" class="err" hidden>Incorrect username or password.</div>
-   <button type="submit" class="cta">Sign in</button>
+   <label>Email<input type="email" id="user" placeholder="owner@yourbusiness.lk" autocomplete="username" required></label>
+   <label>Password<input type="password" id="pass" placeholder="••••••••" autocomplete="current-password" required minlength="6"></label>
+   <div id="err" class="err" hidden></div>
+   <div id="ok" class="ok" hidden></div>
+   <button type="submit" class="cta" id="submitBtn">Sign in</button>
   </form>
-  <p class="hint">Demo credentials: <b>owner</b> / <b>1234</b></p>
+  <p class="hint">First time here? <button type="button" id="toggleMode" class="link">Create the owner account</button></p>
  </div>
 </div>
 <script src="login.js" defer></script>

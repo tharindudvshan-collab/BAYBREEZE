@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 </head>
 <body>
 <aside>
@@ -121,7 +123,7 @@
     <div class="tot big"><span>Total</span><span id="tot">Rs. 0</span></div>
     <div class="pay"><button class="on">Cash</button><button>Bank</button><button>Card</button><button>Credit</button></div>
     <div id="warn"></div>
-    <button class="cta">Take payment</button>
+    <button class="cta" id="payBtn">Take payment</button>
     <p style="color:#6B6F85;font-size:12.5px;margin-top:12px;text-align:center">Hold · Resume · Cancel · Reprint</p>
    </div>
   </div>
