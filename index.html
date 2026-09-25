@@ -129,6 +129,66 @@
   </div>
  </section>
 
+ <section class="view" id="v-products">
+  <h1>Products</h1>
+  <p class="sub">Your full catalog — pricing, stock, categories, and which items are active in POS.</p>
+  <div class="card scroll">
+   <div class="toolbar">
+    <div class="search" id="prodSearchWrap" style="max-width:320px"><input id="prodSearch" placeholder="Search name or SKU…" class="bare"></div>
+    <select id="prodCatFilter" class="bare-select"><option value="all">All categories</option></select>
+    <span id="prodCount" style="color:var(--mute);font-size:12.5px;margin-left:auto">0 products</span>
+    <button class="cta sm" id="addProductBtn">+ Add product</button>
+   </div>
+   <table>
+    <tr><th>SKU</th><th>Name</th><th>Category</th><th class="r">Cost</th><th class="r">Price</th><th class="r">Stock</th><th class="r">Status</th><th class="r">Manage</th></tr>
+    <tbody id="productsBody"></tbody>
+   </table>
+  </div>
+ </section>
+
+ <section class="view" id="v-inventory">
+  <h1>Inventory</h1>
+  <p class="sub">Live stock levels, low-stock alerts, and a full movement history.</p>
+  <div class="grid g4">
+   <div class="card kpi"><div class="ring">₨</div><small>Stock value</small><span class="v" id="invStatValue">Rs. 0</span><small>at cost price</small></div>
+   <div class="card kpi"><div class="ring">▤</div><small>SKUs</small><span class="v" id="invStatSkus">0</span></div>
+   <div class="card kpi"><div class="ring">!</div><small>Low stock</small><span class="v" id="invStatLow">0</span></div>
+   <div class="card kpi"><div class="ring">✕</div><small>Out of stock</small><span class="v" id="invStatOut">0</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px;align-items:start">
+   <div class="card scroll">
+    <div class="toolbar"><h2 style="margin:0">Stock levels</h2><button class="cta sm" id="adjustStockBtn" style="margin-left:auto">Adjust stock</button></div>
+    <table>
+     <tr><th>Product</th><th>Category</th><th class="r">Current</th><th class="r">Reorder at</th><th class="r">Status</th><th class="r"></th></tr>
+     <tbody id="invBody"></tbody>
+    </table>
+   </div>
+   <div class="card scroll">
+    <h2>Recent stock movements</h2>
+    <table>
+     <tr><th>When</th><th>Product</th><th>Type</th><th class="r">Qty</th><th>Note</th></tr>
+     <tbody id="movBody"></tbody>
+    </table>
+   </div>
+  </div>
+ </section>
+
+ <section class="view" id="v-purchases">
+  <h1>Purchases</h1>
+  <p class="sub">Log goods received from suppliers — stock and cost price update automatically.</p>
+  <div class="grid g4">
+   <div class="card kpi"><div class="ring">₨</div><small>This month</small><span class="v" id="purchStatMonth">Rs. 0</span></div>
+   <div class="card kpi"><div class="ring">⇩</div><small>Purchases logged</small><span class="v" id="purchStatCount">0</span></div>
+  </div>
+  <div class="card scroll" style="margin-top:16px">
+   <div class="toolbar"><h2 style="margin:0">Purchase history</h2><button class="cta sm" id="newPurchaseBtn" style="margin-left:auto">+ New purchase</button></div>
+   <table>
+    <tr><th>Date</th><th>Supplier</th><th>Notes</th><th class="r">Total</th><th class="r">Manage</th></tr>
+    <tbody id="purchBody"></tbody>
+   </table>
+  </div>
+ </section>
+
  <section class="view" id="v-other">
   <h1 id="ot">Module</h1>
   <p class="sub">This module is built after the dashboard and POS.</p>
@@ -136,6 +196,77 @@
  </section>
  </div>
 </main>
+
+<!-- ===== Product modal ===== -->
+<div class="modal" id="productModal">
+ <div class="modal-card">
+  <h2 id="pmTitle">Add product</h2>
+  <input type="hidden" id="pmId">
+  <div class="form-grid">
+   <label>Name<input id="pmName" placeholder="e.g. Fish Jaadi 250g"></label>
+   <label>SKU<input id="pmSku" placeholder="e.g. FJ-250"></label>
+   <label>Category<input id="pmCategory" placeholder="e.g. Fish"></label>
+   <label>Unit<input id="pmUnit" placeholder="e.g. pack, kg, bottle" value="unit"></label>
+   <label>Cost price (Rs.)<input id="pmCost" type="number" min="0" step="0.01" value="0"></label>
+   <label>Sell price (Rs.)<input id="pmPrice" type="number" min="0" step="0.01" value="0"></label>
+   <label>Minimum sell price (Rs.)<input id="pmMinPrice" type="number" min="0" step="0.01" value="0"></label>
+   <label>Stock on hand<input id="pmStock" type="number" min="0" step="1" value="0"></label>
+   <label>Reorder level<input id="pmReorder" type="number" min="0" step="1" value="0"></label>
+   <label class="chk"><input type="checkbox" id="pmActive" checked> Active (shows in POS)</label>
+  </div>
+  <div class="modal-actions">
+   <button class="go" id="pmCancelBtn">Cancel</button>
+   <button class="cta sm" id="pmSaveBtn">Save product</button>
+  </div>
+ </div>
+</div>
+
+<!-- ===== Stock adjustment modal ===== -->
+<div class="modal" id="stockAdjustModal">
+ <div class="modal-card">
+  <h2>Adjust stock</h2>
+  <div class="form-grid">
+   <label>Product<select id="saProduct"></select></label>
+   <label>Type<select id="saType">
+     <option value="purchase_in">Stock in (manual)</option>
+     <option value="adjustment" selected>Adjustment (correction)</option>
+     <option value="wastage">Wastage / damage</option>
+     <option value="sale_out">Other stock out</option>
+    </select></label>
+   <label>Quantity<input id="saQty" type="number" min="0" step="1"></label>
+   <label style="grid-column:1/-1">Note<input id="saNote" placeholder="Reason for this change"></label>
+  </div>
+  <p id="saTypeHint" style="color:var(--mute);font-size:12.5px;margin-top:-4px">Removes from stock.</p>
+  <div class="modal-actions">
+   <button class="go" id="saCancelBtn">Cancel</button>
+   <button class="cta sm" id="saSaveBtn">Save</button>
+  </div>
+ </div>
+</div>
+
+<!-- ===== Purchase modal ===== -->
+<div class="modal" id="purchaseModal">
+ <div class="modal-card wide">
+  <h2>New purchase</h2>
+  <div class="form-grid">
+   <label>Supplier name<input id="pSupplier" placeholder="e.g. Umbalakada Traders"></label>
+   <label>Date<input id="pDate" type="date"></label>
+   <label style="grid-column:1/-1">Notes<input id="pNotes" placeholder="Optional"></label>
+  </div>
+  <div class="toolbar" style="margin-top:14px">
+   <select id="pItemProduct" style="flex:1"></select>
+   <input id="pItemQty" type="number" min="1" step="1" value="1" style="width:90px" placeholder="Qty">
+   <input id="pItemCost" type="number" min="0" step="0.01" value="0" style="width:120px" placeholder="Unit cost">
+   <button class="go" id="pAddItemBtn">+ Add item</button>
+  </div>
+  <div id="pItemsList" style="margin-top:10px"></div>
+  <div class="tot big"><span>Total</span><span id="pTotal">Rs. 0</span></div>
+  <div class="modal-actions">
+   <button class="go" id="pCancelBtn">Cancel</button>
+   <button class="cta sm" id="pSaveBtn">Save purchase</button>
+  </div>
+ </div>
+</div>
 <div class="bnav" id="bnav"></div>
 
 <script src="app.js" defer></script>

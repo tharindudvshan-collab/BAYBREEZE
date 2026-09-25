@@ -1,6 +1,6 @@
 /* BAYBREEZE Business OS — service worker
    Caches the app shell so it still opens (with the last-loaded data) offline. */
-const CACHE = 'baybreeze-v1';
+const CACHE = 'baybreeze-v2'; // bumped: Products/Inventory/Purchases tabs added
 const ASSETS = [
   'index.html',
   'login.html',
