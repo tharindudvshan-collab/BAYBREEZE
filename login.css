@@ -1,0 +1,24 @@
+:root{color-scheme:dark;--bg:#090A11;--card:#141622;--card2:#1B1E2E;--line:#262A3D;--ink:#F4F1E8;--mute:#8A8FA6;--amber:#FFB81C;--amber2:#F59E0B;--red:#FF7A66;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:400 14px/1.45 Outfit,system-ui,sans-serif;color:var(--ink);
+ background:radial-gradient(900px 500px at 105% -10%,#FFB81C30,transparent 60%),radial-gradient(700px 500px at -10% 110%,#3B3F6B33,transparent 60%),var(--bg);
+ display:flex;align-items:center;justify-content:center;padding:calc(var(--safe-t) + 24px) 18px calc(var(--safe-b) + 24px)}
+.wrap{width:100%;max-width:400px}
+.card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:26px;padding:32px 28px;box-shadow:0 30px 60px -30px #000}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:22px}
+.ring{width:40px;height:40px;border-radius:50%;border:2px solid var(--amber);display:grid;place-items:center;color:var(--amber);flex:none;font-size:16px}
+.brand b{font-size:19px;color:var(--amber);display:block;line-height:1.1}
+.brand small{color:var(--mute);font-size:12px}
+h1{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.sub{color:var(--mute);margin-bottom:22px}
+form{display:flex;flex-direction:column;gap:14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--mute)}
+input{font:inherit;color:var(--ink);background:#0E1019;border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;transition:border-color .18s}
+input:focus{border-color:var(--amber)}
+.cta{margin-top:4px;padding:14px;border:0;border-radius:99px;font:inherit;font-weight:600;font-size:15px;color:#1A1200;cursor:pointer;
+ background:linear-gradient(150deg,#FFC93C,#F59E0B);box-shadow:0 14px 24px -12px #F59E0BAA;transition:transform .12s}
+.cta:active{transform:scale(.98)}
+.err{background:#3A1E1A;color:var(--red);padding:9px 12px;border-radius:12px;font-size:12.5px}
+.hint{margin-top:18px;text-align:center;color:var(--mute);font-size:12.5px}
+.hint b{color:var(--ink)}
